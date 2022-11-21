@@ -2,31 +2,31 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.CommandLine.Binding;
 using System.CommandLine.Completions;
 using System.CommandLine.Parsing;
+using System.Linq;
 
 namespace System.CommandLine
 {
-    /// <inheritdoc cref="Option" />
+    /// <summary>
+    /// A symbol defining a named parameter and a value for that parameter. 
+    /// </summary>
     /// <typeparam name="T">The <see cref="System.Type"/> that the option's arguments are expected to be parsed as.</typeparam>
-    public class Option<T> : Option, IValueDescriptor<T>
+    public class Option<T> : Argument<T>
     {
-        private readonly Argument<T> _argument;
+        private readonly IdentifierSymbol _id;
 
         /// <inheritdoc/>
-        public Option(
-            string name,
-            string? description = null) 
-            : this(name, description, new Argument<T>())
-        { }
+        public Option(string name, string? description = null) : base(null, description)
+        {
+            _id = new IdentifierSymbol(name);
+        }
 
         /// <inheritdoc/>
-        public Option(
-            string[] aliases,
-            string? description = null) 
-            : this(aliases, description, new Argument<T>())
-        { }
+        public Option(string[] aliases, string? description = null) : base(null, description)
+        {
+            _id = new IdentifierSymbol(aliases);
+        }
 
         /// <inheritdoc/>
         public Option(
@@ -34,9 +34,10 @@ namespace System.CommandLine
             Func<ArgumentResult, T> parseArgument,
             bool isDefault = false,
             string? description = null) 
-            : this(name, description, 
-                  new Argument<T>(parseArgument ?? throw new ArgumentNullException(nameof(parseArgument)), isDefault))
-        { }
+            : base(name, parseArgument, isDefault, description)
+        {
+            _id = new IdentifierSymbol(name);
+        }
 
         /// <inheritdoc/>
         public Option(
@@ -44,137 +45,92 @@ namespace System.CommandLine
             Func<ArgumentResult, T> parseArgument,
             bool isDefault = false,
             string? description = null) 
-            : this(aliases, description, new Argument<T>(parseArgument ?? throw new ArgumentNullException(nameof(parseArgument)), isDefault))
-        { }
+            : base(null, parseArgument, isDefault, description)
+        {
+            _id = new IdentifierSymbol(aliases);
+        }
 
         /// <inheritdoc/>
         public Option(
             string name,
             Func<T> defaultValueFactory,
             string? description = null) 
-            : this(name, description, 
-                  new Argument<T>(defaultValueFactory ?? throw new ArgumentNullException(nameof(defaultValueFactory))))
-        { }
+            : base(name, defaultValueFactory, description)
+        {
+            _id = new IdentifierSymbol(name);
+        }
 
         /// <inheritdoc/>
         public Option(
             string[] aliases,
             Func<T> defaultValueFactory,
             string? description = null)
-            : this(aliases, description, new Argument<T>(defaultValueFactory ?? throw new ArgumentNullException(nameof(defaultValueFactory))))
+            : base(null!, defaultValueFactory, description)
         {
+            _id = new IdentifierSymbol(aliases);
         }
 
-        private protected Option(
-            string name,
-            string? description,
-            Argument<T> argument)
-            : base(name, description)
-        {
-            argument.AddParent(this);
-            _argument = argument;
-        }
-
-        private protected Option(
-            string[] aliases,
-            string? description,
-            Argument<T> argument)
-            : base(aliases, description)
-        {
-            argument.AddParent(this);
-            _argument = argument;
-        }
-
-        internal sealed override Argument Argument => _argument;
-
-        /// <summary>
-        /// Sets the default value for the option.
-        /// </summary>
-        /// <param name="value">The default value for the option.</param>
-        public void SetDefaultValue(T value) => _argument.SetDefaultValue(value);
-
-        /// <summary>
-        /// Sets a delegate to invoke when the default value for the option is required.
-        /// </summary>
-        /// <param name="defaultValueFactory">The delegate to invoke to return the default value.</param>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="defaultValueFactory"/> is null.</exception>
-        public void SetDefaultValueFactory(Func<T> defaultValueFactory) =>
-            _argument.SetDefaultValueFactory(defaultValueFactory);
-
-        /// <summary>
-        /// Configures the option to accept only the specified values, and to suggest them as command line completions.
-        /// </summary>
-        /// <param name="values">The values that are allowed for the option.</param>
-        /// <returns>The configured option.</returns>
-        public Option<T> AcceptOnlyFromAmong(params string[] values)
-        {
-            _argument.AcceptOnlyFromAmong(values);
-
-            return this;
+        /// <inheritdoc/>
+        public override string Name
+        { 
+            get => _id.Name ?? DefaultName;
+            set => _id.Name = value;
         }
 
         /// <summary>
-        /// Adds completions for the option.
+        /// Gets a value that indicates whether multiple argument tokens are allowed for each option identifier token.
         /// </summary>
-        /// <param name="completions">The completions to add.</param>
-        /// <returns>The configured option.</returns>
-        public Option<T> AddCompletions(params string[] completions)
-        {
-            _argument.Completions.Add(completions);
-            return this;
-        }
+        /// <example>
+        /// If set to <see langword="true"/>, the following command line is valid for passing multiple arguments:
+        /// <code>
+        /// > --opt 1 2 3
+        /// </code>
+        /// The following is equivalent and is always valid:
+        /// <code>
+        /// > --opt 1 --opt 2 --opt 3
+        /// </code>
+        /// </example>
+        public bool AllowMultipleArgumentsPerToken { get; set; }
 
         /// <summary>
-        /// Adds completions for the option.
+        /// Indicates whether the option is required when its parent command is invoked.
         /// </summary>
-        /// <param name="completionsDelegate">A function that will be called to provide completions.</param>
-        /// <returns>The configured option.</returns>
-        public Option<T> AddCompletions(Func<CompletionContext, IEnumerable<string>> completionsDelegate)
-        {
-            _argument.Completions.Add(completionsDelegate);
-            return this;
-        }
+        /// <remarks>When an option is required and its parent command is invoked without it, an error results.</remarks>
+        public bool IsRequired { get; set; }
+
+        internal virtual bool IsGreedy => typeof(T) != typeof(bool) && Arity.MinimumNumberOfValues > 0;
 
         /// <summary>
-        /// Adds completions for the option.
+        /// Global options are applied to the command and recursively to subcommands.
+        /// They do not apply to parent commands.
         /// </summary>
-        /// <param name="completionsDelegate">A function that will be called to provide completions.</param>
-        /// <returns>The configured option.</returns>
-        public Option<T> AddCompletions(Func<CompletionContext, IEnumerable<CompletionItem>> completionsDelegate)
-        {
-            _argument.Completions.Add(completionsDelegate);
-            return this;
-        }
+        internal bool IsGlobal { get; set; }
 
-        /// <summary>
-        /// Adds a validator that will be called when the option is matched by the parser.
-        /// </summary>
-        /// <param name="validate">An action used to validate the <see cref="OptionResult"/> produced during parsing.</param>
-        public Option<T> AddValidator(Action<OptionResult> validate)
-        {
-            Validators.Add(validate);
-            return this;
-        }
+        internal bool DisallowBinding { get; init; }
 
-        /// <summary>
-        /// Configures the option to accept only values representing legal file paths.
-        /// </summary>
-        /// <returns>The configured option.</returns>
-        public Option<T> AcceptLegalFilePathsOnly()
-        {
-            _argument.AcceptLegalFilePathsOnly();
-            return this;
-        }
+        private protected override string DefaultName => _id.GetLongestAlias();
 
-        /// <summary>
-        /// Configures the option to accept only values representing legal file names.
-        /// </summary>
-        /// <remarks>A parse error will result, for example, if file path separators are found in the parsed value.</remarks>
-        /// <returns>The configured option.</returns>
-        public Option<T> AcceptLegalFileNamesOnly()
+        /// <inheritdoc />
+        public override IEnumerable<CompletionItem> GetCompletions(CompletionContext context)
         {
-            _argument.AcceptLegalFileNamesOnly();
-            return this;
+            List<CompletionItem>? completions = null;
+
+            foreach (var completion in base.GetCompletions(context))
+            {
+                if (completion.Label.ContainsCaseInsensitive(context.WordToComplete))
+                {
+                    (completions ??= new List<CompletionItem>()).Add(completion);
+                }
+            }
+
+            if (completions is null)
+            {
+                return Array.Empty<CompletionItem>();
+            }
+
+            return completions
+                   .OrderBy(item => item.SortText.IndexOfCaseInsensitive(context.WordToComplete))
+                   .ThenBy(symbol => symbol.Label, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

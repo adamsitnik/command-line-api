@@ -300,5 +300,25 @@ namespace System.CommandLine.DragonFruit
 
             return string.Empty;
         }
+
+        ///// <summary>
+        ///// Indicates whether a given alias exists on the option, regardless of its prefix.
+        ///// </summary>
+        ///// <param name="alias">The alias, which can include a prefix.</param>
+        ///// <returns><see langword="true"/> if the alias exists; otherwise, <see langword="false"/>.</returns>
+        //private bool HasAliasIgnoringPrefix(string alias)
+        //{
+        //    ReadOnlySpan<char> rawAlias = alias.AsSpan(alias.GetPrefixLength());
+
+        //    foreach (string existingAlias in _aliases)
+        //    {
+        //        if (MemoryExtensions.Equals(existingAlias.AsSpan(existingAlias.GetPrefixLength()), rawAlias, StringComparison.CurrentCulture))
+        //        {
+        //            return true;
+        //        }
+        //    }
+
+        //    return false;
+        //}
     }
 }

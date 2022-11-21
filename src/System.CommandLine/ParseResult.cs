@@ -129,8 +129,8 @@ namespace System.CommandLine
         internal T? GetValueFor<T>(IValueDescriptor<T> symbol) =>
             symbol switch
             {
-                Argument<T> argument => GetValue(argument),
                 Option<T> option => GetValue(option),
+                Argument<T> argument => GetValue(argument),
                 _ => throw new ArgumentOutOfRangeException()
             };
 

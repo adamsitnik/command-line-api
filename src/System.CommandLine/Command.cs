@@ -17,8 +17,9 @@ namespace System.CommandLine
     /// <see cref="RootCommand"/> for simple applications that only have one action. For example, <c>dotnet run</c>
     /// uses <c>run</c> as the command.
     /// </remarks>
-    public class Command : IdentifierSymbol, IEnumerable<Symbol>
+    public class Command : Symbol, IEnumerable<Symbol>
     {
+        private readonly IdentifierSymbol _identifier;
         private List<Argument>? _arguments;
         private List<Option>? _options;
         private List<Command>? _subcommands;
@@ -31,6 +32,7 @@ namespace System.CommandLine
         /// <param name="description">The description of the command, shown in help.</param>
         public Command(string name, string? description = null) : base(name, description)
         {
+            _identifier = new IdentifierSymbol(name, removePrefix: false);
         }
 
         /// <summary>

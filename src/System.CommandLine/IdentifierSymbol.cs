@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 
 namespace System.CommandLine
@@ -9,45 +10,52 @@ namespace System.CommandLine
     /// <summary>
     /// A symbol, such as an option or command, having one or more fixed names in a command line interface.
     /// </summary>
-    public abstract class IdentifierSymbol : Symbol
+    internal sealed class IdentifierSymbol
     {
-        private protected readonly HashSet<string> _aliases = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _aliases = new(StringComparer.Ordinal);
         private string? _specifiedName;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IdentifierSymbol"/> class.
-        /// </summary>
-        /// <param name="description">The description of the symbol, which is displayed in command line help.</param>
-        protected IdentifierSymbol(string? description = null)
+        internal IdentifierSymbol(string name, bool removePrefix = true) 
         {
-            Description = description;
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            _specifiedName = removePrefix ? name.RemovePrefix() : name;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IdentifierSymbol"/> class.
-        /// </summary>
-        /// <param name="name">The name of the symbol.</param>
-        /// <param name="description">The description of the symbol, which is displayed in command line help.</param>
-        protected IdentifierSymbol(string name, string? description = null) 
+        internal IdentifierSymbol(string[] aliases)
         {
-            Name = name;
-            Description = description;
+            if (aliases is null)
+            {
+                throw new ArgumentNullException(nameof(aliases));
+            }
+
+            if (aliases.Length == 0)
+            {
+                throw new ArgumentException("An option must have at least one alias.", nameof(aliases));
+            }
+
+            for (var i = 0; i < aliases.Length; i++)
+            {
+                AddAlias(aliases[i]);
+            }
         }
 
         /// <summary>
         /// Gets the set of strings that can be used on the command line to specify the symbol.
         /// </summary>
-        public IReadOnlyCollection<string> Aliases => _aliases;
+        internal IReadOnlyCollection<string> Aliases => _aliases;
 
-        /// <inheritdoc/>
-        public override string Name
+        internal string? Name
         {
-            get => _specifiedName ??= DefaultName;
+            get => _specifiedName;
             set
             {
                 if (_specifiedName is null || !string.Equals(_specifiedName, value, StringComparison.Ordinal))
                 {
-                    AddAlias(value);
+                    AddAlias(value!);
 
                     if (_specifiedName is { })
                     {
@@ -66,21 +74,34 @@ namespace System.CommandLine
         /// <remarks>
         /// You can add multiple aliases for a symbol.
         /// </remarks>
-        public void AddAlias(string alias)
+        internal void AddAlias(string alias)
         {
             ThrowIfAliasIsInvalid(alias);
 
             _aliases.Add(alias);
         }
 
-        private protected virtual void RemoveAlias(string alias) => _aliases.Remove(alias);
+        internal void RemoveAlias(string alias) => _aliases.Remove(alias);
 
         /// <summary>
         /// Determines whether the specified alias has already been defined.
         /// </summary>
         /// <param name="alias">The alias to search for.</param>
         /// <returns><see langword="true" /> if the alias has already been defined; otherwise <see langword="false" />.</returns>
-        public bool HasAlias(string alias) => _aliases.Contains(alias);
+        internal bool HasAlias(string alias) => _aliases.Contains(alias);
+
+        internal string GetLongestAlias()
+        {
+            string max = "";
+            foreach (string alias in _aliases)
+            {
+                if (alias.Length > max.Length)
+                {
+                    max = alias;
+                }
+            }
+            return max.RemovePrefix();
+        }
 
         [DebuggerStepThrough]
         private void ThrowIfAliasIsInvalid(string alias)

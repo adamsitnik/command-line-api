@@ -9,10 +9,11 @@ namespace System.CommandLine.Help
         private string? _description;
 
         public HelpOption(string[] aliases, Func<LocalizationResources> getLocalizationResources)
-            : base(aliases, null, new Argument<bool> { Arity = ArgumentArity.Zero })
+            : base(aliases, null)
         {
             _localizationResources = getLocalizationResources;
             DisallowBinding = true;
+            Arity = ArgumentArity.Zero;
         }
 
         public HelpOption(Func<LocalizationResources> getLocalizationResources) : this(new[]

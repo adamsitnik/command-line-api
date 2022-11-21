@@ -18,6 +18,12 @@ namespace System.CommandLine
         {
         }
 
+        private protected Symbol(string? name = null, string? description = null)
+        {
+            Name = name!;
+            Description = description;
+        }
+
         /// <summary>
         /// Gets or sets the description of the symbol.
         /// </summary>

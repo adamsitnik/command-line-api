@@ -15,11 +15,6 @@ namespace System.CommandLine
         {
             switch (symbol)
             {
-                case Option option:
-                    return new[]
-                    {
-                        option.Argument
-                    };
                 case Command command:
                     return command.Arguments;
                 case Argument argument:

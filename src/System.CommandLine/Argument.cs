@@ -6,6 +6,7 @@ using System.CommandLine.Binding;
 using System.CommandLine.Parsing;
 using System.CommandLine.Completions;
 using System.Linq;
+using System.Diagnostics;
 
 namespace System.CommandLine
 {
@@ -90,13 +91,9 @@ namespace System.CommandLine
             {
                 if (FirstParent is not null && FirstParent.Next is null)
                 {
-                    switch (FirstParent.Symbol)
-                    {
-                        case Option option:
-                            return option.Name;
-                        case Command _:
-                            return ValueType.Name.ToLowerInvariant();
-                    }
+                    Debug.Assert(FirstParent.Symbol is Command);
+
+                    return ValueType.Name.ToLowerInvariant();
                 }
 
                 return "";
