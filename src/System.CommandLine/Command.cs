@@ -54,19 +54,19 @@ namespace System.CommandLine
         /// <summary>
         /// Represents all of the arguments for the command.
         /// </summary>
-        public IReadOnlyList<Argument> Arguments => _arguments is not null ? _arguments : Array.Empty<Argument>();
+        public List<Argument> Arguments => _arguments ??= new();
 
-        internal bool HasArguments => _arguments is not null;
+        internal bool HasArguments => _arguments is not null && _arguments.Count > 0;
 
         /// <summary>
         /// Represents all of the options for the command, including global options that have been applied to any of the command's ancestors.
         /// </summary>
-        public IReadOnlyList<Option> Options => _options is not null ? _options : Array.Empty<Option>();
+        public List<Option> Options => _options ??= new();
 
         /// <summary>
         /// Represents all of the subcommands for the command.
         /// </summary>
-        public IReadOnlyList<Command> Subcommands => _subcommands is not null ? _subcommands : Array.Empty<Command>();
+        public List<Command> Subcommands => _subcommands ??= new();
 
         /// <summary>
         /// Validators to the command. Validators can be used
@@ -77,37 +77,6 @@ namespace System.CommandLine
         internal bool HasValidators => _validators is not null && _validators.Count > 0;
 
         /// <summary>
-        /// Adds an <see cref="Argument"/> to the command.
-        /// </summary>
-        /// <param name="argument">The argument to add to the command.</param>
-        public void AddArgument(Argument argument)
-        {
-            argument.AddParent(this);
-            (_arguments ??= new()).Add(argument);
-        }
-
-        /// <summary>
-        /// Adds a subcommand to the command.
-        /// </summary>
-        /// <param name="command">The subcommand to add to the command.</param>
-        /// <remarks>Commands can be nested to an arbitrary depth.</remarks>
-        public void AddCommand(Command command)
-        {
-            command.AddParent(this);
-            (_subcommands ??= new()).Add(command);
-        }
-
-        /// <summary>
-        /// Adds an <see cref="Option"/> to the command.
-        /// </summary>
-        /// <param name="option">The option to add to the command.</param>
-        public void AddOption(Option option)
-        {
-            option.AddParent(this);
-            (_options ??= new()).Add(option);
-        }
-
-        /// <summary>
         /// Adds a global <see cref="Option"/> to the command.
         /// </summary>
         /// <param name="option">The global option to add to the command.</param>
@@ -116,26 +85,26 @@ namespace System.CommandLine
         public void AddGlobalOption(Option option)
         {
             option.IsGlobal = true;
-            AddOption(option);
+            Options.Add(option);
         }
         /// <summary>
         /// Adds an <see cref="Option"/> to the command.
         /// </summary>
         /// <param name="option">The option to add to the command.</param>
-        public void Add(Option option) => AddOption(option);
+        public void Add(Option option) => Options.Add(option);
 
         /// <summary>
         /// Adds an <see cref="Argument"/> to the command.
         /// </summary>
         /// <param name="argument">The argument to add to the command.</param>
-        public void Add(Argument argument) => AddArgument(argument);
+        public void Add(Argument argument) => Arguments.Add(argument);
 
         /// <summary>
         /// Adds a subcommand to the command.
         /// </summary>
         /// <param name="command">The subcommand to add to the command.</param>
         /// <remarks>Commands can be nested to an arbitrary depth.</remarks>
-        public void Add(Command command) => AddCommand(command);
+        public void Add(Command command) => Subcommands.Add(command);
 
         private protected override string DefaultName => throw new NotImplementedException();
 
