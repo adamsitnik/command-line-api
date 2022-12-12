@@ -69,7 +69,7 @@ namespace System.CommandLine
             Argument<T> argument)
             : base(name, description)
         {
-            argument.AddParent(this);
+            argument.Option = this;
             _argument = argument;
         }
 
@@ -79,7 +79,7 @@ namespace System.CommandLine
             Argument<T> argument)
             : base(aliases, description)
         {
-            argument.AddParent(this);
+            argument.Option = this;
             _argument = argument;
         }
 

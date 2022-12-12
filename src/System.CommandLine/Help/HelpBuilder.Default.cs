@@ -53,7 +53,7 @@ public partial class HelpBuilder
             if (argument.ValueType == typeof(bool) ||
                 argument.ValueType == typeof(bool?))
             {
-                if (argument.FirstParent?.Symbol is Command)
+                if (argument.Option is null)
                 {
                     return $"<{argument.Name}>";
                 }

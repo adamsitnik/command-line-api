@@ -141,23 +141,19 @@ namespace System.CommandLine
         /// </summary>
         public static ArgumentArity OneOrMore => new(1, MaximumArity);
 
-        internal static ArgumentArity Default(Type type, Argument argument, ParentNode? firstParent)
+        internal static ArgumentArity Default(Type type, Argument argument, bool ownedByOption)
         {
             if (type == typeof(bool) || type == typeof(bool?))
             {
                 return ZeroOrOne;
             }
 
-            var parent = firstParent?.Symbol;
-
             if (type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type))
             {
-                return parent is Command
-                           ? ZeroOrMore
-                           : OneOrMore;
+                return ownedByOption ? OneOrMore : ZeroOrMore;
             }
 
-            if (parent is Command &&
+            if (!ownedByOption &&
                 (argument.HasDefaultValue ||
                  type.IsNullable()))
             {

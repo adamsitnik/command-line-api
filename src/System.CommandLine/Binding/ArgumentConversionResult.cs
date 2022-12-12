@@ -53,18 +53,11 @@ namespace System.CommandLine.Binding
             string value,
             LocalizationResources localizationResources)
         {
-            if (argument.FirstParent?.Symbol is IdentifierSymbol identifierSymbol &&
-                argument.FirstParent.Next is null)
+            if (argument.Option is not null)
             {
-                var alias = identifierSymbol.Aliases.First();
+                var alias = argument.Option.Aliases.First();
 
-                switch (identifierSymbol)
-                {
-                    case Command _:
-                        return localizationResources.ArgumentConversionCannotParseForCommand(value, alias, expectedType);
-                    case Option _:
-                        return localizationResources.ArgumentConversionCannotParseForOption(value, alias, expectedType);
-                }
+                return localizationResources.ArgumentConversionCannotParseForOption(value, alias, expectedType);
             }
 
             return localizationResources.ArgumentConversionCannotParse(value, expectedType);

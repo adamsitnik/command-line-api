@@ -89,8 +89,8 @@ namespace System.CommandLine.Parsing
                 case ArgumentResult argumentResult:
                 {
                     var includeArgumentName =
-                        argumentResult.Argument.FirstParent!.Symbol is Command command &&
-                        command.Arguments.Count > 1;
+                        argumentResult.Parent is CommandResult commandResult &&
+                        commandResult.Command.Arguments.Count > 1;
 
                     if (includeArgumentName)
                     {

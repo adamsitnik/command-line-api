@@ -357,10 +357,10 @@ namespace System.CommandLine.Parsing
             }
 
             bool checkOnlyGlobalOptions = false;
-            Command? currentCommand = command;
-            while (currentCommand is not null)
+            CommandResult? currentCommandResult = _innermostCommandResult!;
+            while (currentCommandResult is not null)
             {
-                var options = currentCommand.Options;
+                var options = currentCommandResult.Command.Options;
                 for (var i = 0; i < options.Count; i++)
                 {
                     var option = options[i];
@@ -377,7 +377,7 @@ namespace System.CommandLine.Parsing
                     }
                 }
 
-                currentCommand = currentCommand.FirstParent?.Symbol as Command;
+                currentCommandResult = currentCommandResult.Parent as CommandResult;
                 checkOnlyGlobalOptions = true;
             }
 
@@ -520,7 +520,7 @@ namespace System.CommandLine.Parsing
             if (argumentConversionResult.Result >= ArgumentConversionResultType.Failed && 
                 argumentConversionResult.Result != ArgumentConversionResultType.FailedArity)
             {
-                if (argument.FirstParent?.Symbol is Option option)
+                if (argument.Option is Option option)
                 {
                     var completions = option.GetCompletions().ToArray();
 

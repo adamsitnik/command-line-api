@@ -50,8 +50,8 @@ namespace System.CommandLine
                 {
                     _arity = ArgumentArity.Default(
                         ValueType, 
-                        this, 
-                        FirstParent);
+                        this,
+                        Option is not null);
                 }
 
                 return _arity;
@@ -69,6 +69,8 @@ namespace System.CommandLine
             get => _convertArguments ??= ArgumentConverter.GetConverter(this);
             init => _convertArguments = value;
         }
+
+        internal Option? Option { get; set; }
 
         /// <summary>
         /// Gets the list of completion sources for the argument.
@@ -88,18 +90,12 @@ namespace System.CommandLine
         {
             get
             {
-                if (FirstParent is not null && FirstParent.Next is null)
+                if (Option is not null)
                 {
-                    switch (FirstParent.Symbol)
-                    {
-                        case Option option:
-                            return option.Name;
-                        case Command _:
-                            return ValueType.Name.ToLowerInvariant();
-                    }
+                    return Option.Name;
                 }
 
-                return "";
+                return ValueType.Name.ToLowerInvariant();
             }
         }
 
