@@ -39,10 +39,9 @@ namespace System.CommandLine.Parsing
         {
             arguments ??= Array.Empty<string>();
 
-            arguments.Tokenize(
+            Token[] tokens = arguments.Tokenize(
                 Configuration,
                 inferRootCommand: rawInput is not null,
-                out List<Token> tokens,
                 out List<string>? tokenizationErrors);
 
             var operation = new ParseOperation(

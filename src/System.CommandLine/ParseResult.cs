@@ -16,6 +16,7 @@ namespace System.CommandLine
     {
         private readonly IReadOnlyList<ParseError> _errors;
         private readonly CommandResult _rootCommandResult;
+        private readonly ArraySegment<Token> _tokens;
         private readonly IReadOnlyList<Token> _unmatchedTokens;
         private Dictionary<string, IReadOnlyList<string>>? _directives;
         private CompletionContext? _completionContext;
@@ -25,7 +26,7 @@ namespace System.CommandLine
             CommandResult rootCommandResult,
             CommandResult commandResult,
             Dictionary<string, IReadOnlyList<string>>? directives,
-            List<Token> tokens,
+            Token[] tokens,
             IReadOnlyList<Token>? unmatchedTokens,
             List<ParseError>? errors,
             string? commandLineText = null)
@@ -36,18 +37,9 @@ namespace System.CommandLine
             _directives = directives;
 
             // skip the root command when populating Tokens property
-            if (tokens.Count > 1)
-            {
-                // Since TokenizeResult.Tokens is not public and not used anywhere after the parsing,
-                // we take advantage of its mutability and remove the root command token
-                // instead of creating a copy of the whole list.
-                tokens.RemoveAt(0);
-                Tokens = tokens;
-            }
-            else
-            {
-                Tokens = Array.Empty<Token>();
-            }
+            _tokens = tokens.Length > 1
+                ? new ArraySegment<Token>(tokens, 1, tokens.Length - 1)
+                : new ArraySegment<Token>(Array.Empty<Token>());
 
             CommandLineText = commandLineText;
 
@@ -103,7 +95,7 @@ namespace System.CommandLine
         /// <summary>
         /// Gets the tokens identified while parsing command line input.
         /// </summary>
-        public IReadOnlyList<Token> Tokens { get; }
+        public IReadOnlyList<Token> Tokens => _tokens;
 
         /// <summary>
         /// Holds the value of a complete command line input prior to splitting and tokenization, when provided.

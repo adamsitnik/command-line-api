@@ -7,12 +7,12 @@ namespace System.CommandLine.Parsing
 {
     internal sealed class ParseOperation
     {
-        private readonly List<Token> _tokens;
+        private readonly Token[] _tokens;
         private readonly CommandLineConfiguration _configuration;
         private int _index;
 
         public ParseOperation(
-            List<Token> tokens,
+            Token[] tokens,
             CommandLineConfiguration configuration)
         {
             _tokens = tokens;
@@ -29,7 +29,7 @@ namespace System.CommandLine.Parsing
 
         private bool More(out TokenType currentTokenType)
         {
-            bool result = _index < _tokens.Count;
+            bool result = _index < _tokens.Length;
             currentTokenType = result ? _tokens[_index].Type : (TokenType)(-1);
             return result;
         }

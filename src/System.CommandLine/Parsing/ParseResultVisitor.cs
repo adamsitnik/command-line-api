@@ -12,7 +12,7 @@ namespace System.CommandLine.Parsing
     internal sealed class ParseResultVisitor
     {
         private readonly Parser _parser;
-        private readonly List<Token> _tokens;
+        private readonly Token[] _tokens;
         private readonly string? _rawInput;
         private readonly SymbolResultTree _symbolResultTree;
         private readonly CommandResult _rootCommandResult;
@@ -26,7 +26,7 @@ namespace System.CommandLine.Parsing
 
         internal ParseResultVisitor(
             Parser parser,
-            List<Token> tokens,
+            Token[] tokens,
             List<string>? tokenizeErrors,
             List<Token>? unmatchedTokens,
             string? rawInput,
