@@ -7,14 +7,14 @@ namespace System.CommandLine.Parsing
 {
     internal sealed class SymbolResultTree : Dictionary<Symbol, SymbolResult>
     {
-        private readonly LocalizationResources _localizationResources;
+        internal readonly Token[] Tokens;
+        internal readonly LocalizationResources LocalizationResources;
 
-        internal SymbolResultTree(LocalizationResources localizationResources)
+        internal SymbolResultTree(Token[] tokens, LocalizationResources localizationResources)
         {
-            _localizationResources = localizationResources;
+            Tokens = tokens;
+            LocalizationResources = localizationResources;
         }
-
-        internal LocalizationResources LocalizationResources => _localizationResources;
 
         internal ArgumentResult? FindResultFor(Argument argument)
             => TryGetValue(argument, out SymbolResult? result) ? (ArgumentResult)result : default;

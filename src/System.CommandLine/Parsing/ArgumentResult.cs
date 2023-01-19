@@ -12,6 +12,7 @@ namespace System.CommandLine.Parsing
     /// </summary>
     public sealed class ArgumentResult : SymbolResult
     {
+        internal ArraySegment<Token>? PassedOnTokens;
         private ArgumentConversionResult? _conversionResult;
 
         internal ArgumentResult(
@@ -30,8 +31,6 @@ namespace System.CommandLine.Parsing
         internal override int MaximumArgumentCapacity => Argument.Arity.MaximumNumberOfValues;
 
         internal bool IsImplicit => Argument.HasDefaultValue && Tokens.Count == 0;
-
-        internal IReadOnlyList<Token>? PassedOnTokens { get; private set; }
 
         internal ArgumentConversionResult GetArgumentConversionResult() =>
             _conversionResult ??= Convert(Argument);
@@ -62,18 +61,18 @@ namespace System.CommandLine.Parsing
                 throw new ArgumentOutOfRangeException(nameof(numberOfTokens), numberOfTokens, "Value must be at least 1.");
             }
 
-            if (PassedOnTokens is { })
+            if (PassedOnTokens is not null)
             {
                 throw new InvalidOperationException($"{nameof(OnlyTake)} can only be called once.");
             }
 
-            if (_tokens is not null)
+            if (_tokenCount > 0)
             {
-                var passedOnTokensCount = _tokens.Count - numberOfTokens;
+                int passedOnTokensCount = _tokenCount - numberOfTokens;
 
-                PassedOnTokens = new List<Token>(_tokens.GetRange(numberOfTokens, passedOnTokensCount));
+                PassedOnTokens = new ArraySegment<Token>(SymbolResultTree.Tokens, _tokenOffset + _tokenCount - passedOnTokensCount, passedOnTokensCount);
 
-                _tokens.RemoveRange(numberOfTokens, passedOnTokensCount);
+                _tokenCount -= passedOnTokensCount;
             }
         }
 

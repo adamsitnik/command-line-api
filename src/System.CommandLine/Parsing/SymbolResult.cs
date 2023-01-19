@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.CommandLine.Binding;
+using System.Diagnostics;
 using System.Linq;
 
 namespace System.CommandLine.Parsing
@@ -13,7 +14,11 @@ namespace System.CommandLine.Parsing
     public abstract class SymbolResult
     {
         internal readonly SymbolResultTree SymbolResultTree;
-        private protected List<Token>? _tokens;
+        private protected int _tokenCount;
+        private protected int _tokenOffset = -1;
+#if DEBUG
+        private int _previousTokenIndex = -1;
+#endif
 
         private protected SymbolResult(SymbolResultTree symbolResultTree, SymbolResult? parent)
         {
@@ -35,7 +40,7 @@ namespace System.CommandLine.Parsing
         /// <summary>
         /// The list of tokens associated with this symbol result during parsing.
         /// </summary>
-        public IReadOnlyList<Token> Tokens => _tokens is not null ? _tokens : Array.Empty<Token>();
+        public IReadOnlyList<Token> Tokens => new ArraySegment<Token>(SymbolResultTree.Tokens, Math.Max(_tokenOffset, 0), _tokenCount);
 
         internal bool IsArgumentLimitReached => RemainingArgumentCapacity == 0;
 
@@ -49,7 +54,24 @@ namespace System.CommandLine.Parsing
         /// </summary>
         public LocalizationResources LocalizationResources => SymbolResultTree.LocalizationResources;
 
-        internal void AddToken(Token token) => (_tokens ??= new()).Add(token);
+        internal void AddToken(Token token)
+        {
+#if DEBUG
+            Debug.Assert(_previousTokenIndex == -1 || _previousTokenIndex == token.Index - 1);
+            _previousTokenIndex = token.Index;
+#endif
+
+            if (_tokenOffset == -1)
+            {
+                _tokenOffset = token.Index;
+            }
+            else if (_tokenOffset < token.Index)
+            {
+                _tokenOffset = token.Index;
+            }
+
+            _tokenCount++;
+        }
 
         /// <summary>
         /// Finds a result for the specific argument anywhere in the parse tree, including parent and child symbol results.

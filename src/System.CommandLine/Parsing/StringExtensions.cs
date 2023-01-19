@@ -206,19 +206,19 @@ namespace System.CommandLine.Parsing
                     tokenList.Add(Argument(arg));
                 }
 
-                Token Argument(string value) => new(value, TokenType.Argument, default, i);
+                Token Argument(string value) => new(value, TokenType.Argument, default, i, tokenList.Count);
 
-                Token CommandArgument(string value, Command command) => new(value, TokenType.Argument, command, i);
+                Token CommandArgument(string value, Command command) => new(value, TokenType.Argument, command, i, tokenList.Count);
 
-                Token OptionArgument(string value, Option option) => new(value, TokenType.Argument, option, i);
+                Token OptionArgument(string value, Option option) => new(value, TokenType.Argument, option, i, tokenList.Count);
 
-                Token Command(string value, Command cmd) => new(value, TokenType.Command, cmd, i);
+                Token Command(string value, Command cmd) => new(value, TokenType.Command, cmd, i, tokenList.Count);
 
-                Token Option(string value, Option option) => new(value, TokenType.Option, option, i);
+                Token Option(string value, Option option) => new(value, TokenType.Option, option, i, tokenList.Count);
 
-                Token DoubleDash() => new("--", TokenType.DoubleDash, default, i);
+                Token DoubleDash() => new("--", TokenType.DoubleDash, default, i, tokenList.Count);
 
-                Token Directive(string value) => new(value, TokenType.Directive, default, i);
+                Token Directive(string value) => new(value, TokenType.Directive, default, i, tokenList.Count);
             }
 
             errors = errorList;
@@ -244,7 +244,7 @@ namespace System.CommandLine.Parsing
                         {
                             if (alias[i] == ':' || alias[i] == '=')
                             {
-                                tokenList.Add(new Token(alias.Slice(i + 1).ToString(), TokenType.Argument, default, argumentIndex));
+                                tokenList.Add(new Token(alias.Slice(i + 1).ToString(), TokenType.Argument, default, argumentIndex, tokenList.Count));
                                 return true;
                             }
 
@@ -254,14 +254,14 @@ namespace System.CommandLine.Parsing
                                 if (tokensBefore != tokenList.Count && tokenList[tokenList.Count - 1].Type == TokenType.Option)
                                 {
                                     // Invalid_char_in_bundle_causes_rest_to_be_interpreted_as_value
-                                    tokenList.Add(new Token(alias.Slice(i).ToString(), TokenType.Argument, default, argumentIndex));
+                                    tokenList.Add(new(alias.Slice(i).ToString(), TokenType.Argument, default, argumentIndex, tokenList.Count));
                                     return true;
                                 }
 
                                 return false;
                             }
 
-                            tokenList.Add(new Token(found.Value, found.Type, found.Symbol, argumentIndex));
+                            tokenList.Add(new Token(found.Value, found.Type, found.Symbol, argumentIndex, tokenList.Count));
                             if (i != alias.Length - 1 && ((Option)found.Symbol!).IsGreedy)
                             {
                                 int index = i + 1;
@@ -269,7 +269,7 @@ namespace System.CommandLine.Parsing
                                 {
                                     index++; // Last_bundled_option_can_accept_argument_with_colon_separator
                                 }
-                                tokenList.Add(new Token(alias.Slice(index).ToString(), TokenType.Argument, default, argumentIndex));
+                                tokenList.Add(new (alias.Slice(index).ToString(), TokenType.Argument, default, argumentIndex, tokenList.Count));
                                 return true;
                             }
                         }
@@ -429,7 +429,7 @@ namespace System.CommandLine.Parsing
             {
                 tokens.Add(
                     commandAlias,
-                    new Token(commandAlias, TokenType.Command, command, Token.ImplicitPosition));
+                    new Token(commandAlias, TokenType.Command, command, Token.ImplicitPosition, tokens.Count));
             }
 
             if (command.HasSubcommands)
@@ -440,7 +440,7 @@ namespace System.CommandLine.Parsing
                     Command cmd = subCommands[childIndex];
                     foreach (string childAlias in cmd.Aliases)
                     {
-                        tokens.Add(childAlias, new Token(childAlias, TokenType.Command, cmd, Token.ImplicitPosition));
+                        tokens.Add(childAlias, new Token(childAlias, TokenType.Command, cmd, Token.ImplicitPosition, tokens.Count));
                     }
                 }
             }
@@ -455,7 +455,7 @@ namespace System.CommandLine.Parsing
                     {
                         if (!option.IsGlobal || !tokens.ContainsKey(childAlias))
                         {
-                            tokens.Add(childAlias, new Token(childAlias, TokenType.Option, option, Token.ImplicitPosition));
+                            tokens.Add(childAlias, new Token(childAlias, TokenType.Option, option, Token.ImplicitPosition, tokens.Count));
                         }
                     }
                 }
@@ -481,7 +481,7 @@ namespace System.CommandLine.Parsing
                                     {
                                         if (!tokens.ContainsKey(childAlias))
                                         {
-                                            tokens.Add(childAlias, new Token(childAlias, TokenType.Option, option, Token.ImplicitPosition));
+                                            tokens.Add(childAlias, new Token(childAlias, TokenType.Option, option, Token.ImplicitPosition, tokens.Count));
                                         }
                                     }
                                 }

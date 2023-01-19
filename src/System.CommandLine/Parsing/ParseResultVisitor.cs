@@ -12,7 +12,6 @@ namespace System.CommandLine.Parsing
     internal sealed class ParseResultVisitor
     {
         private readonly Parser _parser;
-        private readonly Token[] _tokens;
         private readonly string? _rawInput;
         private readonly SymbolResultTree _symbolResultTree;
         private readonly CommandResult _rootCommandResult;
@@ -33,10 +32,9 @@ namespace System.CommandLine.Parsing
             CommandNode rootCommandNode)
         {
             _parser = parser;
-            _tokens = tokens;
             _unmatchedTokens = unmatchedTokens;
             _rawInput = rawInput;
-            _symbolResultTree = new(_parser.Configuration.LocalizationResources);
+            _symbolResultTree = new(tokens, _parser.Configuration.LocalizationResources);
             _innermostCommandResult = _rootCommandResult = new CommandResult(
                 rootCommandNode.Command,
                 rootCommandNode.Token,
@@ -595,7 +593,7 @@ namespace System.CommandLine.Parsing
                 _rootCommandResult,
                 _innermostCommandResult,
                 _directives,
-                _tokens,
+                _symbolResultTree.Tokens,
                 _unmatchedTokens,
                 _errors,
                 _rawInput);

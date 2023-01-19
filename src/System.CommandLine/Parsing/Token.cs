@@ -21,15 +21,24 @@ namespace System.CommandLine.Parsing
             Position = ImplicitPosition;
         }
        
-        internal Token(string? value, TokenType type, Symbol? symbol, int position)
+        internal Token(string? value, TokenType type, Symbol? symbol, int position, int index)
         {
             Value = value ?? "";
             Type = type;
             Symbol = symbol;
             Position = position;
+            Index = index;
         }
 
+        /// <summary>
+        /// Position in the arguments provided by the user
+        /// </summary>
         internal int Position { get; }
+
+        /// <summary>
+        /// Index in the Tokens list created by parser
+        /// </summary>
+        internal int Index { get; }
 
         /// <summary>
         /// The string value of the token.
